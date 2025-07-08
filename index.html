@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Resume Builder</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- jsPDF and html2canvas for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Lottie Player for Animations -->
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <!-- AOS (Animate On Scroll) Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <!-- Firebase SDKs -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Expose Firebase functions to the global scope for script.js
+        // This is necessary because script.js is loaded with 'defer' and not as a module.
+        // In a more complex app, you might use modules throughout or a bundler.
+        window.firebase = {
+            initializeApp,
+            getAuth,
+            signInAnonymously,
+            signInWithCustomToken,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            signOut,
+            onAuthStateChanged,
+            getFirestore,
+            doc,
+            getDoc,
+            setDoc,
+            onSnapshot,
+            collection
+        };
+    </script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app" class="min-h-screen flex flex-col">
+        <!-- Message Box -->
+        <div id="message-overlay" class="message-overlay"></div>
+        <div id="message-box" class="message-box">
+            <p id="message-content" class="text-lg font-medium mb-4"></p>
+            <button id="message-box-ok-button">OK</button>
+        </div>
+
+        <!-- Tutorial Overlay -->
+        <div id="tutorial-overlay" class="tutorial-overlay">
+            <div class="tutorial-modal">
+                <button class="close-button" id="tutorial-close-button">&times;</button>
+                <h3 id="tutorial-title">Welcome to Resume Builder!</h3>
+                <p id="tutorial-text">Let's get started. This tool helps you create a professional resume in a few easy steps.</p>
+                <button id="tutorial-next-button">Next</button>
+            </div>
+        </div>
+
+        <!-- Animated Character Container (Chatbot Trigger) -->
+        <div id="animated-character-container" class="hidden">
+            <!-- UPDATED Lottie animation URL -->
+            <lottie-player id="animated-character" src="https://lottie.host/100e471d-556b-439f-a8c6-6b22b10214a1/zK521G2Gk1.json" background="transparent" speed="1" loop autoplay></lottie-player>
+        </div>
+
+        <!-- AI Chatbot Modal -->
+        <div id="chatbot-modal" class="chatbot-modal hidden">
+            <div class="chatbot-content">
+                <div class="chatbot-header">
+                    <h3 class="text-xl font-bold text-primary">AI Assistant</h3>
+                    <button class="chatbot-close-button" id="chatbot-close-button">&times;</button>
+                </div>
+                <div class="chatbot-messages" id="chatbot-messages">
+                    <!-- Chat messages will be appended here -->
+                    <div class="message from-ai">Hello! I'm your AI Resume Assistant. How can I help you build a better resume today?</div>
+                </div>
+                <div class="chatbot-input">
+                    <input type="text" id="chatbot-input-field" placeholder="Ask me anything about resumes..." class="w-full p-2 rounded-md border border-border-color focus:ring focus:ring-primary">
+                    <button id="chatbot-send-button" class="bg-primary text-white p-2 rounded-md ml-2 hover:bg-secondary-color transition duration-200">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="loading-spinner hidden" id="chatbot-loading-spinner"></div>
+            </div>
+        </div>
+
+        <!-- Login/Signup Modal -->
+        <div id="auth-modal" class="auth-modal hidden">
+            <div class="auth-content">
+                <button class="auth-close-button" id="auth-close-button">&times;</button>
+                <h3 class="text-2xl font-bold mb-6 text-primary text-center" id="auth-title">Login</h3>
+
+                <!-- Login Form -->
+                <form id="login-form" class="space-y-4">
+                    <div>
+                        <label for="login-email" class="block text-sm font-medium text-text-color mb-1">Email</label>
+                        <input type="email" id="login-email" class="w-full p-2 rounded-md border border-border-color focus:ring focus:ring-primary" required>
+                    </div>
+                    <div>
+                        <label for="login-password" class="block text-sm font-medium text-text-color mb-1">Password</label>
+                        <input type="password" id="login-password" class="w-full p-2 rounded-md border border-border-color focus:ring focus:ring-primary" required>
+                    </div>
+                    <button type="submit" class="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-secondary-color transition duration-200">Login</button>
+                    <p class="text-center text-sm text-text-color mt-4">Don't have an account? <button type="button" id="show-signup" class="text-primary hover:underline">Sign Up</button></p>
+                </form>
+
+                <!-- Signup Form -->
+                <form id="signup-form" class="space-y-4 hidden">
+                    <div>
+                        <label for="signup-email" class="block text-sm font-medium text-text-color mb-1">Email</label>
+                        <input type="email" id="signup-email" class="w-full p-2 rounded-md border border-border-color focus:ring focus:ring-primary" required>
+                    </div>
+                    <div>
+                        <label for="signup-password" class="block text-sm font-medium text-text-color mb-1">Password</label>
+                        <input type="password" id="signup-password" class="w-full p-2 rounded-md border border-border-color focus:ring focus:ring-primary" required>
+                    </div>
+                    <div>
+                        <label for="signup-confirm-password" class="block text-sm font-medium text-text-color mb-1">Confirm Password</label>
+                        <input type="password" id="signup-confirm-password" class="w-full p-2 rounded-md border border-border-color focus:ring focus:ring-primary" required>
+                    </div>
+                    <button type="submit" class="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-secondary-color transition duration-200">Sign Up</button>
+                    <p class="text-center text-sm text-text-color mt-4">Already have an account? <button type="button" id="show-login" class="text-primary hover:underline">Login</button></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Landing Page -->
+        <section id="landing-page" class="min-h-screen flex flex-col justify-center items-center text-center px-4 py-16 bg-cover bg-center parallax-section" style="background-image: url('https://placehold.co/1920x1080/4F46E5/FFFFFF?text=GET+HIRED+NOW');">
+            <div class="absolute inset-0 bg-black opacity-60"></div>
+            <div class="relative z-10 text-white max-w-4xl mx-auto">
+                <h1 data-aos="fade-up" data-aos-duration="1000" class="text-5xl md:text-6xl font-extrabold leading-tight mb-6 drop-shadow-lg">
+                    Build Your Dream Resume, Effortlessly.
+                </h1>
+                <p data-aos="fade-up" data-aos-delay="200" data-aos-duration="1000" class="text-xl md:text-2xl mb-10 opacity-90">
+                    Craft professional, eye-catching resumes in minutes with our intuitive builder.
+                </p>
+                <div data-aos="fade-up" data-aos-delay="400" data-aos-duration="1000" class="flex justify-center items-center space-x-4 mb-12">
+                    <button id="get-started-btn" class="bg-primary text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-secondary-color transform hover:scale-105 transition duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-primary">
+                        Get Started <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                    <button id="learn-more-btn" class="bg-transparent border-2 border-white text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-white hover:text-primary transform hover:scale-105 transition duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-white">
+                        Learn More <i class="fas fa-info-circle ml-2"></i>
+                    </button>
+                </div>
+
+                <div data-aos="fade-up" data-aos-delay="600" data-aos-duration="1000" class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+                    <div class="bg-white bg-opacity-10 backdrop-blur-sm p-6 rounded-lg shadow-xl border border-white border-opacity-20">
+                        <h3 class="text-4xl font-bold text-primary mb-2" id="stat-resumes">0+</h3>
+                        <p class="text-white text-lg">Resumes Built</p>
+                    </div>
+                    <div class="bg-white bg-opacity-10 backdrop-blur-sm p-6 rounded-lg shadow-xl border border-white border-opacity-20">
+                        <h3 class="text-4xl font-bold text-primary mb-2" id="stat-users">0+</h3>
+                        <p class="text-white text-lg">Happy Users</p>
+                    </div>
+                    <div class="bg-white bg-opacity-10 backdrop-blur-sm p-6 rounded-lg shadow-xl border border-white border-opacity-20">
+                        <h3 class="text-4xl font-bold text-primary mb-2" id="stat-features">0+</h3>
+                        <p class="text-white text-lg">Powerful Features</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about-section" class="py-20 px-4 bg-card text-center">
+            <div class="max-w-6xl mx-auto">
+                <h2 data-aos="fade-up" class="text-4xl font-bold mb-12 text-primary">Why Choose Our Resume Builder?</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                    <div data-aos="fade-up" data-aos-delay="100" class="p-8 rounded-lg shadow-lg bg-card border border-border-color">
+                        <i class="fas fa-magic text-5xl text-primary mb-6"></i>
+                        <h3 class="text-2xl font-semibold mb-4">Effortless Creation</h3>
+                        <p class="text-gray-600 dark:text-gray-300">Intuitive interface guides you through each section, making resume building a breeze.</p>
+                    </div>
+                    <div data-aos="fade-up" data-aos-delay="200" class="p-8 rounded-lg shadow-lg bg-card border border-border-color">
+                        <i class="fas fa-file-pdf text-5xl text-primary mb-6"></i>
+                        <h3 class="text-2xl font-semibold mb-4">Instant PDF Export</h3>
+                        <p class="text-gray-600 dark:text-gray-300">Download your polished resume as a professional PDF with just one click.</p>
+                    </div>
+                    <div data-aos="fade-up" data-aos-delay="300" class="p-8 rounded-lg shadow-lg bg-card border border-border-color">
+                        <i class="fas fa-palette text-5xl text-primary mb-6"></i>
+                        <h3 class="text-2xl font-semibold mb-4">Stunning Designs</h3>
+                        <p class="text-gray-600 dark:text-gray-300">Choose from a variety of modern templates and customize colors to stand out.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section class="py-20 px-4 bg-gray-100 dark:bg-gray-800 text-center">
+            <div class="max-w-6xl mx-auto">
+                <h2 data-aos="fade-up" class="text-4xl font-bold mb-12 text-primary">How It Works</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                    <div data-aos="fade-up" data-aos-delay="100" class="flex flex-col items-center">
+                        <div class="w-24 h-24 rounded-full bg-primary flex items-center justify-center mb-6 shadow-lg">
+                            <i class="fas fa-1 text-white text-4xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-semibold mb-4">Fill Your Details</h3>
+                        <p class="text-gray-600 dark:text-gray-300">Enter your personal, educational, and professional information into our guided form.</p>
+                    </div>
+                    <div data-aos="fade-up" data-aos-delay="200" class="flex flex-col items-center">
+                        <div class="w-24 h-24 rounded-full bg-primary flex items-center justify-center mb-6 shadow-lg">
+                            <i class="fas fa-2 text-white text-4xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-semibold mb-4">Customize & Preview</h3>
+                        <p class="text-gray-600 dark:text-gray-300">Select a template, choose your colors, and see a live preview of your resume.</p>
+                    </div>
+                    <div data-aos="fade-up" data-aos-delay="300" class="flex flex-col items-center">
+                        <div class="w-24 h-24 rounded-full bg-primary flex items-center justify-center mb-6 shadow-lg">
+                            <i class="fas fa-3 text-white text-4xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-semibold mb-4">Download & Apply</h3>
+                        <p class="text-gray-600 dark:text-gray-300">Download your perfect resume as a PDF and start applying for your dream job!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="py-20 px-4 bg-card text-center">
+            <div class="max-w-6xl mx-auto">
+                <h2 data-aos="fade-up" class="text-4xl font-bold mb-12 text-primary">Powerful Features</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div data-aos="fade-up" data-aos-delay="100" class="p-6 rounded-lg shadow-lg bg-card border border-border-color flex items-start text-left">
+                        <i class="fas fa-list-ol text-3xl text-primary mr-4 mt-1"></i>
+                        <div>
+                            <h3 class="text-xl font-semibold mb-2">Multi-Step Form</h3>
+                            <p class="text-gray-600 dark:text-gray-300">Break down the process into easy, manageable steps.</p>
+                        </div>
+                    </div>
+                    <div data-aos="fade-up" data-aos-delay="200" class="p-6 rounded-lg shadow-lg bg-card border border-border-color flex items-start text-left">
+                        <i class="fas fa-save text-3xl text-primary mr-4 mt-1"></i>
+                        <div>
+                            <h3 class="text-xl font-semibold mb-2">Autosave Functionality</h3>
+                            <p class="text-gray-600 dark:text-gray-300">Never lose your progress. Your data is automatically saved.</p>
+                        </div>
+                    </div>
+                    <div data-aos="fade-up" data-aos-delay="300" class="p-6 rounded-lg shadow-lg bg-card border border-border-color flex items-start text-left">
+                        <i class="fas fa-exchange-alt text-3xl text-primary mr-4 mt-1"></i>
+                        <div>
+                            <h3 class="text-xl font-semibold mb-2">Import/Export JSON</h3>
+                            <p class="text-gray-600 dark:text-gray-300">Easily backup and restore your resume data.</p>
+                        </div>
+                    </div>
+                    <div data-aos="fade-up" data-aos-delay="400" class="p-6 rounded-lg shadow-lg bg-card border border-border-color flex items-start text-left">
+                        <i class="fas fa-robot text-3xl text-primary mr-4 mt-1"></i>
+                        <div>
+                            <h3 class="text-xl font-semibold mb-2">AI-Powered Suggestions</h3>
+                            <p class="text-gray-600 dark:text-gray-300">Get smart recommendations for your resume content (e.g., summary, skills).</p>
+                        </div>
+                    </div>
+                    <div data-aos="fade-up" data-aos-delay="500" class="p-6 rounded-lg shadow-lg bg-card border border-border-color flex items-start text-left">
+                        <i class="fas fa-chart-bar text-3xl text-primary mr-4 mt-1"></i>
+                        <div>
+                            <h3 class="text-xl font-semibold mb-2">Resume Analytics & Score</h3>
+                            <p class="text-gray-600 dark:text-gray-300">Understand your resume's strengths and areas for improvement.</p>
+                        </div>
+                    </div>
+                    <div data-aos="fade-up" data-aos-delay="600" class="p-6 rounded-lg shadow-lg bg-card border border-border-color flex items-start text-left">
+                        <i class="fas fa-paint-brush text-3xl text-primary mr-4 mt-1"></i>
+                        <div>
+                            <h3 class="text-xl font-semibold mb-2">Template Customization</h3>
+                            <p class="text-gray-600 dark:text-gray-300">Personalize your resume with various templates and color themes.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Premium Features Section -->
+        <section id="premium-features-section" class="py-20 px-4 bg-gray-100 dark:bg-gray-800 text-center">
+            <div class="max-w-6xl mx-auto">
+                <h2 data-aos="fade-up" class="text-4xl font-bold mb-12 text-primary">Unlock Premium Features</h2>
+                <p data-aos="fade-up" data-aos-delay="100" class="text-lg text-text-color mb-10">
+                    Take your resume to the next level with our exclusive premium benefits.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div data-aos="zoom-in" data-aos-delay="200" class="bg-card p-8 rounded-lg shadow-lg border border-border-color flex flex-col items-center">
+                        <i class="fas fa-gem text-5xl text-accent-color mb-6"></i>
+                        <h3 class="text-2xl font-semibold mb-4">Advanced Templates</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">Access a wider range of modern, industry-specific resume templates.</p>
+                    </div>
+                    <div data-aos="zoom-in" data-aos-delay="300" class="bg-card p-8 rounded-lg shadow-lg border border-border-color flex flex-col items-center">
+                        <i class="fas fa-brain text-5xl text-accent-color mb-6"></i>
+                        <h3 class="text-2xl font-semibold mb-4">Enhanced AI Suggestions</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">Get more in-depth, personalized content suggestions from our AI assistant.</p>
+                    </div>
+                    <div data-aos="zoom-in" data-aos-delay="400" class="bg-card p-8 rounded-lg shadow-lg border border-border-color flex flex-col items-center">
+                        <i class="fas fa-headset text-5xl text-accent-color mb-6"></i>
+                        <h3 class="text-2xl font-semibold mb-4">Priority Support</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">Receive faster, dedicated support for all your resume building needs.</p>
+                    </div>
+                    <div data-aos="zoom-in" data-aos-delay="500" class="bg-card p-8 rounded-lg shadow-lg border border-border-color flex flex-col items-center">
+                        <i class="fas fa-chart-line text-5xl text-accent-color mb-6"></i>
+                        <h3 class="text-2xl font-semibold mb-4">In-depth Analytics</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">Detailed resume score breakdown and industry comparison data.</p>
+                    </div>
+                    <div data-aos="zoom-in" data-aos-delay="600" class="bg-card p-8 rounded-lg shadow-lg border border-border-color flex flex-col items-center">
+                        <i class="fas fa-cloud-upload-alt text-5xl text-accent-color mb-6"></i>
+                        <h3 class="text-2xl font-semibold mb-4">Cloud Storage</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">Securely store multiple resume versions in the cloud.</p>
+                    </div>
+                    <div data-aos="zoom-in" data-aos-delay="700" class="bg-card p-8 rounded-lg shadow-lg border border-border-color flex flex-col items-center">
+                        <i class="fas fa-download text-5xl text-accent-color mb-6"></i>
+                        <h3 class="text-2xl font-semibold mb-4">Unlimited Downloads</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">Download as many PDFs as you need, anytime.</p>
+                    </div>
+                </div>
+
+                <h3 data-aos="fade-up" data-aos-delay="800" class="text-3xl font-bold mt-16 mb-8 text-primary">Simple Pricing</h3>
+                <div data-aos="fade-up" data-aos-delay="900" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Basic Plan -->
+                    <div class="bg-card p-8 rounded-lg shadow-xl border-2 border-border-color flex flex-col">
+                        <h4 class="text-2xl font-bold text-primary mb-4">Basic</h4>
+                        <p class="text-4xl font-extrabold mb-4">$0<span class="text-lg font-normal text-gray-500">/month</span></p>
+                        <ul class="text-left text-text-color space-y-2 mb-6 flex-1">
+                            <li><i class="fas fa-check-circle text-green-500 mr-2"></i> Standard Templates</li>
+                            <li><i class="fas fa-check-circle text-green-500 mr-2"></i> Basic AI Suggestions</li>
+                            <li><i class="fas fa-check-circle text-green-500 mr-2"></i> Limited Downloads</li>
+                        </ul>
+                        <button class="bg-gray-300 text-gray-800 py-3 px-6 rounded-md font-semibold cursor-not-allowed">Current Plan</button>
+                    </div>
+
+                    <!-- Pro Plan -->
+                    <div class="bg-card p-8 rounded-lg shadow-xl border-2 border-primary flex flex-col transform scale-105">
+                        <h4 class="text-2xl font-bold text-primary mb-4">Pro</h4>
+                        <p class="text-4xl font-extrabold mb-4">$9<span class="text-lg font-normal text-gray-500">/month</span></p>
+                        <ul class="text-left text-text-color space-y-2 mb-6 flex-1">
+                            <li><i class="fas fa-check-circle text-green-500 mr-2"></i> All Basic Features</li>
+                            <li><i class="fas fa-check-circle text-green-500 mr-2"></i> Advanced Templates</li>
+                            <li><i class="fas fa-check-circle text-green-500 mr-2"></i> Enhanced AI Suggestions</li>
+                            <li><i class="fas fa-check-circle text-green-500 mr-2"></i> Priority Support</li>
+                        </ul>
+                        <button class="bg-primary text-white py-3 px-6 rounded-md font-semibold hover:bg-secondary-color transition duration-200">Get Pro</button>
+                    </div>
+
+                    <!-- Enterprise Plan -->
+                    <div class="bg-card p-8 rounded-lg shadow-xl border-2 border-border-color flex flex-col">
+                        <h4 class="text-2xl font-bold text-primary mb-4">Enterprise</h4>
+                        <p class="text-4xl font-extrabold mb-4">$29<span class="text-lg font-normal text-gray-500">/month</span></p>
+                        <ul class="text-left text-text-color space-y-2 mb-6 flex-1">
+                            <li><i class="fas fa-check-circle text-green-500 mr-2"></i> All Pro Features</li>
+                            <li><i class="fas fa-check-circle text-green-500 mr-2"></i> In-depth Analytics</li>
+                            <li><i class="fas fa-check-circle text-green-500 mr-2"></i> Cloud Storage</li>
+                            <li><i class="fas fa-check-circle text-green-500 mr-2"></i> Unlimited Downloads</li>
+                        </ul>
+                        <button class="bg-primary text-white py-3 px-6 rounded-md font-semibold hover:bg-secondary-color transition duration-200">Contact Us</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- Call to Action Section -->
+        <section class="py-20 px-4 bg-primary text-white text-center">
+            <div class="max-w-4xl mx-auto">
+                <h2 data-aos="zoom-in" class="text-4xl md:text-5xl font-bold mb-6">Ready to Land Your Dream Job?</h2>
+                <p data-aos="zoom-in" data-aos-delay="100" class="text-xl md:text-2xl mb-10 opacity-90">
+                    Start building your professional resume today – it's free and easy!
+                </p>
+                <button data-aos="zoom-in" data-aos-delay="200" id="get-started-btn-bottom" class="bg-white text-primary font-bold py-3 px-8 rounded-full shadow-lg hover:bg-gray-200 transform hover:scale-105 transition duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-white">
+                    Build My Resume Now <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Main Resume Builder App (Initially Hidden) -->
+        <div id="resume-app" class="hidden flex-1 flex flex-col">
+            <!-- Header -->
+            <header class="sticky top-0 z-50 bg-card shadow-md py-4 px-6 flex items-center justify-between border-b border-border-color">
+                <div class="flex items-center">
+                    <a href="#" id="app-logo" class="text-2xl font-bold text-primary flex items-center">
+                        <i class="fas fa-file-alt mr-2"></i> Resume Builder
+                    </a>
+                    <!-- Desktop Navigation -->
+                    <nav class="hidden md:flex items-center space-x-6 ml-8">
+                        <button class="text-text-color hover:text-primary font-medium transition duration-200" data-step="0">Personal</button>
+                        <button class="text-text-color hover:text-primary font-medium transition duration-200" data-step="1">Education</button>
+                        <button class="text-text-color hover:text-primary font-medium transition duration-200" data-step="2">Experience</button>
+                        <button class="text-text-color hover:text-primary font-medium transition duration-200" data-step="3">Skills & Summary</button>
+                        <button class="text-text-color hover:text-primary font-medium transition duration-200" data-step="4">Preview</button>
+                    </nav>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- User Display / Auth Button -->
+                    <span id="user-display" class="text-text-color text-sm hidden"></span>
+                    <!-- FIX: Removed 'hidden md:inline-block' to make it always visible -->
+                    <button id="auth-button" class="bg-primary text-white py-2 px-4 rounded-md hover:bg-secondary-color transition duration-200 inline-block">
+                        Login / Signup
+                    </button>
+                    <button id="logout-button" class="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-700 transition duration-200 hidden">
+                        Logout
+                    </button>
+
+                    <!-- Theme Toggle -->
+                    <button id="theme-toggle" class="p-2 rounded-full bg-input-bg-color text-text-color hover:bg-border-color transition duration-200">
+                        <i class="fas fa-sun dark:hidden"></i>
+                        <i class="fas fa-moon hidden dark:inline-block"></i>
+                    </button>
+                    <!-- Color Palette (initially hidden) -->
+                    <div id="color-palette" class="absolute top-full right-4 mt-2 p-2 bg-card border border-border-color rounded-md shadow-lg flex flex-wrap gap-2 hidden transform scale-95 opacity-0 transition-all duration-200 ease-out origin-top-right">
+                        <button class="w-8 h-8 rounded-full bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-800" data-theme="indigo"></button>
+                        <button class="w-8 h-8 rounded-full bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-800" data-theme="blue"></button>
+                        <button class="w-8 h-8 rounded-full bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-800" data-theme="green"></button>
+                        <button class="w-8 h-8 rounded-full bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-800" data-theme="purple"></button>
+                        <button class="w-8 h-8 rounded-full bg-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-800" data-theme="pink"></button>
+                        <button class="w-8 h-8 rounded-full bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-800" data-theme="red"></button>
+                        <button class="w-8 h-8 rounded-full bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-800" data-theme="yellow"></button>
+                        <button class="w-8 h-8 rounded-full bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-800" data-theme="orange"></button>
+                        <button class="w-8 h-8 rounded-full bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-800" data-theme="teal"></button>
+                        <button class="w-8 h-8 rounded-full bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-800" data-theme="cyan"></button>
+                    </div>
+
+                    <!-- Hamburger Menu for Mobile -->
+                    <button id="hamburger-menu" class="md:hidden p-2 rounded-md text-text-color hover:bg-border-color transition duration-200">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Mobile Navigation (hidden by default) -->
+            <nav id="mobile-nav" class="md:hidden bg-card shadow-lg py-4 px-6 space-y-3 hidden">
+                <button class="block w-full text-left text-text-color hover:text-primary font-medium transition duration-200 py-2 px-3 rounded-md" data-step="0">Personal Details</button>
+                <button class="block w-full text-left text-text-color hover:text-primary font-medium transition duration-200 py-2 px-3 rounded-md" data-step="1">Education</button>
+                <button class="block w-full text-left text-text-color hover:text-primary font-medium transition duration-200 py-2 px-3 rounded-md" data-step="2">Experience</button>
+                <button class="block w-full text-left text-text-color hover:text-primary font-medium transition duration-200 py-2 px-3 rounded-md" data-step="3">Skills & Summary</button>
+                <button class="block w-full text-left text-text-color hover:text-primary font-medium transition duration-200 py-2 px-3 rounded-md" data-step="4">Preview & Export</button>
+                <hr class="border-border-color my-2">
+                <button id="mobile-export-json" class="block w-full text-left text-text-color hover:text-primary font-medium transition duration-200 py-2 px-3 rounded-md">Export JSON</button>
+                <input type="file" id="mobile-import-json-input" accept=".json" class="hidden">
+                <button id="mobile-import-json" class="block w-full text-left text-text-color hover:text-primary font-medium transition duration-200 py-2 px-3 rounded-md">Import JSON</button>
+                <button id="mobile-download-pdf" class="block w-full text-left text-text-color hover:text-primary font-medium transition duration-200 py-2 px-3 rounded-md">Download PDF</button>
+            </nav>
+
+            <!-- Main Content Area -->
+            <main class="flex-1 flex flex-col md:flex-row bg-bg-color">
+                <!-- Form Section -->
+                <section class="w-full md:w-1/2 p-6 lg:p-8 bg-card shadow-lg overflow-y-auto custom-scrollbar">
+                    <h2 class="text-3xl font-bold text-primary mb-6">Build Your Resume</h2>
+
+                    <!-- Progress Indicator -->
+                    <div class="flex justify-between items-center mb-8">
+                        <div class="flex flex-col items-center">
+                            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm" data-step-indicator="0">1</div>
+                            <span class="text-xs mt-1 text-text-color">Personal</span>
+                        </div>
+                        <div class="flex-1 h-1 bg-gray-300 mx-2 rounded-full"></div>
+                        <div class="flex flex-col items-center">
+                            <div class="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold text-sm" data-step-indicator="1">2</div>
+                            <span class="text-xs mt-1 text-text-color">Education</span>
+                        </div>
+                        <div class="flex-1 h-1 bg-gray-300 mx-2 rounded-full"></div>
+                        <div class="flex flex-col items-center">
+                            <div class="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold text-sm" data-step-indicator="2">3</div>
+                            <span class="text-xs mt-1 text-text-color">Experience</span>
+                        </div>
+                        <div class="flex-1 h-1 bg-gray-300 mx-2 rounded-full"></div>
+                        <div class="flex flex-col items-center">
+                            <div class="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold text-sm" data-step-indicator="3">4</div>
+                            <span class="text-xs mt-1 text-text-color">Skills & Summary</span>
+                        </div>
+                        <div class="flex-1 h-1 bg-gray-300 mx-2 rounded-full"></div>
+                        <div class="flex flex-col items-center">
+                            <div class="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold text-sm" data-step-indicator="4">5</div>
+                            <span class="text-xs mt-1 text-text-color">Preview</span>
+                        </div>
+                    </div>
+
+                    <!-- Resume Form -->
+                    <form id="resume-form" class="space-y-6">
+                        <!-- Step 1: Personal Details -->
+                        <div class="form-step" id="step-personal">
+                            <h3 class="text-2xl font-semibold text-primary mb-4">Personal Details</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="name" class="block text-sm font-medium text-text-color mb-1">Full Name <span class="text-red-500">*</span></label>
+                                    <input type="text" id="name" required class="w-full p-2 rounded-md border border-border-color focus:ring focus:ring-primary">
+                                </div>
+                                <div>
+                                    <label for="email" class="block text-sm font-medium text-text-color mb-1">Email <span class="text-red-500">*</span></label>
+                                    <input type="email" id="email" required class="w-full p-2 rounded-md border border-border-color focus:ring focus:ring-primary">
+                                </div>
+                                <div>
+                                    <label for="phone" class="block text-sm font-medium text-text-color mb-1">Phone</label>
+                                    <input type="tel" id="phone" class="w-full p-2 rounded-md border border-border-color focus:ring focus:ring-primary">
+                                </div>
+                                <div>
+                                    <label for="linkedin" class="block text-sm font-medium text-text-color mb-1">LinkedIn Profile</label>
+                                    <input type="url" id="linkedin" class="w-full p-2 rounded-md border border-border-color focus:ring focus:ring-primary" placeholder="e.g., https://linkedin.com/in/yourprofile">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label for="address" class="block text-sm font-medium text-text-color mb-1">Address</label>
+                                    <input type="text" id="address" class="w-full p-2 rounded-md border border-border-color focus:ring focus:ring-primary">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Education -->
+                        <div class="form-step hidden" id="step-education">
+                            <h3 class="text-2xl font-semibold text-primary mb-4">Education</h3>
+                            <div id="education-entries">
+                                <!-- Education entries will be dynamically added here -->
+                            </div>
+                            <button type="button" id="add-education" class="bg-primary text-white py-2 px-4 rounded-md hover:bg-secondary-color transition duration-200">Add Education</button>
+                        </div>
+
+                        <!-- Step 3: Experience -->
+                        <div class="form-step hidden" id="step-experience">
+                            <h3 class="text-2xl font-semibold text-primary mb-4">Work Experience</h3>
+                            <div id="experience-entries">
+                                <!-- Experience entries will be dynamically added here -->
+                            </div>
+                            <!-- FIX: Ensure this button has the correct ID 'add-experience' -->
+                            <button type="button" id="add-experience" class="bg-primary text-white py-2 px-4 rounded-md hover:bg-secondary-color transition duration-200">Add Experience</button>
+                        </div>
+
+                        <!-- Step 4: Skills & Summary -->
+                        <div class="form-step hidden" id="step-skills-summary">
+                            <h3 class="text-2xl font-semibold text-primary mb-4">Skills & Summary</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="skills" class="block text-sm font-medium text-text-color mb-1">Skills (comma-separated)</label>
+                                    <textarea id="skills" rows="3" class="w-full p-2 rounded-md border border-border-color focus:ring focus:ring-primary" placeholder="e.g., JavaScript, React, Node.js, Project Management"></textarea>
+                                </div>
+                                <div>
+                                    <label for="summary" class="block text-sm font-medium text-text-color mb-1">Professional Summary</label>
+                                    <textarea id="summary" rows="6" class="w-full p-2 rounded-md border border-border-color focus:ring focus:ring-primary" placeholder="A concise overview of your professional background, skills, and career goals."></textarea>
+                                    <button type="button" id="ai-suggest-summary" class="mt-2 bg-accent-color text-white py-2 px-4 rounded-md hover:bg-pink-700 transition duration-200 flex items-center justify-center">
+                                        <i class="fas fa-robot mr-2"></i> Get AI Suggestion
+                                        <div class="loading-spinner ml-2 hidden" id="ai-loading-spinner"></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 5: Preview & Export -->
+                        <div class="form-step hidden" id="step-preview-export">
+                            <h3 class="text-2xl font-semibold text-primary mb-4">Preview & Export</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="template-select" class="block text-sm font-medium text-text-color mb-1">Choose Template</label>
+                                    <select id="template-select" class="w-full p-2 rounded-md border border-border-color focus:ring focus:ring-primary">
+                                        <option value="classic">Classic</option>
+                                        <option value="modern">Modern</option>
+                                        <option value="elegant">Elegant</option>
+                                        <option value="creative">Creative</option>
+                                    </select>
+                                </div>
+                                <div class="bg-input-bg-color p-4 rounded-md border border-border-color">
+                                    <h4 class="text-lg font-semibold mb-2">Resume Analytics</h4>
+                                    <p class="text-sm text-text-color">Completeness: <span id="completeness-score" class="font-bold">0%</span></p>
+                                    <p class="text-sm text-text-color">Keyword Density: <span id="keyword-density" class="font-bold">Low</span></p>
+                                    <p class="text-sm text-text-color">Overall Score: <span id="overall-score" class="font-bold">Poor</span></p>
+                                </div>
+                                <div class="flex flex-col sm:flex-row gap-4">
+                                    <button type="button" id="download-pdf" class="flex-1 bg-green-500 text-white py-3 px-6 rounded-md font-semibold hover:bg-green-600 transition duration-200 flex items-center justify-center">
+                                        <i class="fas fa-file-pdf mr-2"></i> Download PDF
+                                    </button>
+                                    <button type="button" id="export-json" class="flex-1 bg-blue-500 text-white py-3 px-6 rounded-md font-semibold hover:bg-blue-600 transition duration-200 flex items-center justify-center">
+                                        <i class="fas fa-download mr-2"></i> Export JSON
+                                    </button>
+                                    <input type="file" id="import-json-input" accept=".json" class="hidden">
+                                    <button type="button" onclick="document.getElementById('import-json-input').click()" class="flex-1 bg-yellow-500 text-white py-3 px-6 rounded-md font-semibold hover:bg-yellow-600 transition duration-200 flex items-center justify-center">
+                                        <i class="fas fa-upload mr-2"></i> Import JSON
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Navigation Buttons -->
+                        <div class="flex justify-between mt-8 pt-4 border-t border-border-color">
+                            <button type="button" id="prev-step" class="bg-gray-300 text-gray-800 py-2 px-6 rounded-md hover:bg-gray-400 transition duration-200 hidden">Previous</button>
+                            <button type="button" id="next-step" class="bg-primary text-white py-2 px-6 rounded-md hover:bg-secondary-color transition duration-200">Next</button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Resume Preview Section -->
+                <section class="w-full md:w-1/2 p-6 lg:p-8 bg-gray-100 dark:bg-gray-700 overflow-y-auto custom-scrollbar flex justify-center items-start">
+                    <div id="resume-preview" class="w-full max-w-a4-portrait h-a4-portrait shadow-xl border border-border-color bg-white text-gray-900 relative">
+                        <div id="resume-preview-content" class="p-5">
+                            <!-- Resume content will be generated here -->
+                            <p class="text-center text-gray-500">Your resume preview will appear here as you fill out the form.</p>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-white py-8 px-4 text-center">
+            <div class="max-w-6xl mx-auto">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+                    <div class="mb-4 md:mb-0">
+                        <a href="#" class="text-2xl font-bold flex items-center justify-center md:justify-start">
+                            <i class="fas fa-file-alt mr-2"></i> Resume Builder
+                        </a>
+                        <p class="text-sm text-gray-400 mt-2">&copy; 2024 Resume Builder. All rights reserved.</p>
+                    </div>
+                    <nav class="flex space-x-6">
+                        <a href="#landing-page" class="hover:text-primary transition duration-200">Home</a>
+                        <a href="#about-section" class="hover:text-primary transition duration-200">About</a>
+                        <a href="#premium-features-section" class="hover:text-primary transition duration-200">Pricing</a>
+                        <a href="#" class="hover:text-primary transition duration-200">Contact</a>
+                    </nav>
+                    <div class="flex space-x-4 mt-4 md:mt-0">
+                        <a href="#" class="text-gray-400 hover:text-primary transition duration-200"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-primary transition duration-200"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-primary transition duration-200"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-primary transition duration-200"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="border-t border-gray-700 pt-6 text-sm text-gray-400">
+                    <p>Designed and Developed with <i class="fas fa-heart text-red-500 mx-1"></i> by Your Team</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Main JavaScript File -->
+    <script src="script.js"></script>
+</body>
+</html>

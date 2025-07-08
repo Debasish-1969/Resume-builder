@@ -1,0 +1,568 @@
+/* Custom CSS for transitions and theme variables */
+:root {
+    --primary-color: #4F46E5; /* Indigo 600 */
+    --secondary-color: #6366F1; /* Indigo 500 */
+    --accent-color: #EC4899; /* Pink 500 */
+    --text-color: #1F2937; /* Gray 900 */
+    --bg-color: #F9FAFB; /* Gray 50 */
+    --card-bg-color: #FFFFFF;
+    --border-color: #E5E7EB; /* Gray 200 */
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --input-bg-color: #F3F4F6; /* Gray 100 */
+}
+
+.dark-mode {
+    --primary-color: #818CF8; /* Indigo 400 */
+    --secondary-color: #6366F1; /* Indigo 500 */
+    --accent-color: #F472B6; /* Pink 400 */
+    --text-color: #E5E7EB; /* Gray 200 */
+    --bg-color: #111827; /* Gray 900 */
+    --card-bg-color: #1F2937; /* Gray 800 */
+    --border-color: #374151; /* Gray 700 */
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --input-bg-color: #374151; /* Gray 700 */
+}
+
+/* Define 10 color themes */
+.theme-indigo { --primary-color: #4F46E5; --secondary-color: #6366F1; --accent-color: #EC4899; }
+.theme-blue { --primary-color: #3B82F6; --secondary-color: #60A5FA; --accent-color: #EF4444; }
+.theme-green { --primary-color: #22C55E; --secondary-color: #4ADE80; --accent-color: #FACC15; }
+.theme-purple { --primary-color: #9333EA; --secondary-color: #A855F7; --accent-color: #EC4899; }
+.theme-pink { --primary-color: #EC4899; --secondary-color: #F472B6; --accent-color: #8B5CF6; }
+.theme-red { --primary-color: #EF4444; --secondary-color: #F87171; --accent-color: #FACC15; }
+.theme-yellow { --primary-color: #EAB308; --secondary-color: #FDE047; --accent-color: #EF4444; }
+.theme-orange { --primary-color: #F97316; --secondary-color: #FB923C; --accent-color: #22C55E; }
+.theme-teal { --primary-color: #14B8A6; --secondary-color: #2DD4BF; --accent-color: #FACC15; }
+.theme-cyan { --primary-color: #06B6D4; --secondary-color: #22D3EE; --accent-color: #EF4444; }
+
+body {
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    scroll-behavior: smooth;
+}
+
+/* General element styling */
+.bg-primary { background-color: var(--primary-color); }
+.text-primary { color: var(--primary-color); }
+.border-primary { border-color: var(--primary-color); }
+.hover\:bg-primary-dark:hover { background-color: var(--secondary-color); }
+/* Removed redundant box-shadow for input:focus, relying on Tailwind's ring */
+
+.bg-card { background-color: var(--card-bg-color); }
+.border-card { border-color: var(--border-color); }
+.shadow-custom { box-shadow: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -1px var(--shadow-color); }
+
+input, textarea, select {
+    background-color: var(--input-bg-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+input:focus, textarea:focus, select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    /* Tailwind's focus:ring-primary handles the ring effect */
+}
+
+/* Parallax effect for landing page */
+.parallax-section {
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+/* Custom scrollbar for better aesthetics */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-color);
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-color);
+}
+
+/* Smooth transitions for all elements */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+/* Animated character container */
+#animated-character-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    cursor: pointer;
+    width: 80px; /* Adjust size as needed */
+    height: 80px; /* Adjust size as needed */
+    border-radius: 50%;
+    background-color: var(--card-bg-color);
+    box-shadow: 0 4px 12px var(--shadow-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#animated-character-container lottie-player {
+    width: 100%;
+    height: 100%;
+}
+
+/* Message box for alerts */
+.message-box {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--card-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 10px 15px -3px var(--shadow-color), 0 4px 6px -2px var(--shadow-color);
+    z-index: 10000;
+    display: none; /* Hidden by default */
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+}
+.message-box button {
+    margin-top: 1rem;
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.5rem;
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+.message-box button:hover {
+    background-color: var(--secondary-color);
+}
+.message-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: none; /* Hidden by default */
+}
+
+/* Loading spinner */
+.loading-spinner {
+    border: 4px solid var(--border-color);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    display: none; /* Hidden by default */
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Tutorial Overlay */
+.tutorial-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.tutorial-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+.tutorial-modal {
+    background-color: var(--card-bg-color);
+    border-radius: 0.75rem;
+    padding: 2rem;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    text-align: center;
+    position: relative;
+}
+.tutorial-modal h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+.tutorial-modal p {
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+.tutorial-modal button {
+    padding: 0.75rem 2rem;
+    border-radius: 0.5rem;
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+.tutorial-modal button:hover {
+    background-color: var(--secondary-color);
+}
+.tutorial-modal .close-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+/* Resume Preview Styles */
+#resume-preview-content {
+    font-family: 'Inter', sans-serif;
+    padding: 20px;
+    max-width: 800px; /* A4-like width */
+    margin: 0 auto;
+    background-color: white; /* Always white for PDF export */
+    color: #333; /* Always dark text for PDF export */
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    min-height: 1122px; /* A4 aspect ratio */
+}
+#resume-preview-content h2, #resume-preview-content h3 {
+    color: var(--primary-color); /* Use theme color for headings */
+    margin-bottom: 0.5rem;
+}
+#resume-preview-content h2 { font-size: 1.8rem; border-bottom: 2px solid var(--primary-color); padding-bottom: 5px; margin-top: 1.5rem; }
+#resume-preview-content h3 { font-size: 1.4rem; margin-top: 1rem; }
+#resume-preview-content p, #resume-preview-content ul {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 0.75rem;
+}
+#resume-preview-content ul { list-style-type: disc; margin-left: 20px; }
+#resume-preview-content strong { font-weight: 600; }
+#resume-preview-content .section-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-top: 1.5rem;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--border-color);
+}
+#resume-preview-content .flex-between { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem; }
+
+/* Template styles */
+.template-classic #resume-preview-content {
+    border-left: 5px solid var(--primary-color);
+    padding-left: 25px;
+}
+.template-modern #resume-preview-content .header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+.template-modern #resume-preview-content .header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 5px;
+}
+.template-modern #resume-preview-content .header p {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.8);
+}
+.template-modern #resume-preview-content h2 {
+    border-bottom: none;
+    color: var(--primary-color);
+    text-align: center;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    position: relative;
+}
+.template-modern #resume-preview-content h2::after {
+    content: '';
+    display: block;
+    width: 50px;
+    height: 3px;
+    background-color: var(--primary-color);
+    margin: 5px auto 0;
+}
+
+/* New Elegant Template Styles */
+.template-elegant #resume-preview-content {
+    border: 1px solid #ccc;
+    box-shadow: none;
+    padding: 40px;
+}
+.template-elegant #resume-preview-content .header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.template-elegant #resume-preview-content .header h1 {
+    font-size: 2.8rem;
+    color: #333; /* Always dark for elegant template */
+    margin-bottom: 5px;
+}
+.template-elegant #resume-preview-content .header p {
+    font-size: 1.1rem;
+    color: #666;
+}
+.template-elegant #resume-preview-content .section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-align: left;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 5px;
+}
+.template-elegant #resume-preview-content h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+}
+.template-elegant #resume-preview-content p,
+.template-elegant #resume-preview-content ul {
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+/* New Creative Template Styles */
+.template-creative #resume-preview-content {
+    background-color: #f8f8f8; /* Light gray background */
+    border-radius: 10px;
+    overflow: hidden;
+    padding: 0; /* Remove default padding for custom layout */
+}
+.template-creative #resume-preview-content .header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 30px;
+    text-align: center;
+    margin-bottom: 0;
+    border-bottom-left-radius: 50% 20px;
+    border-bottom-right-radius: 50% 20px;
+}
+.template-creative #resume-preview-content .header h1 {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+.template-creative #resume-preview-content .header p {
+    font-size: 1.1rem;
+    color: rgba(255,255,255,0.9);
+}
+.template-creative #resume-preview-content .main-content {
+    padding: 30px;
+}
+.template-creative #resume-preview-content .section-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    position: relative;
+    padding-left: 15px;
+}
+.template-creative #resume-preview-content .section-title::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    background-color: var(--accent-color);
+    border-radius: 50%;
+}
+.template-creative #resume-preview-content h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+.template-creative #resume-preview-content ul {
+    list-style-type: none; /* Remove default bullets */
+    margin-left: 0;
+    padding-left: 0;
+}
+.template-creative #resume-preview-content ul li {
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 5px;
+}
+.template-creative #resume-preview-content ul li::before {
+    content: '•'; /* Custom bullet point */
+    position: absolute;
+    left: 0;
+    color: var(--accent-color);
+    font-size: 1.2em;
+    line-height: 1;
+}
+
+/* Chatbot Modal Styles */
+.chatbot-modal {
+    position: fixed;
+    bottom: 110px; /* Above the animated character */
+    right: 20px;
+    width: 350px;
+    height: 500px;
+    background-color: var(--card-bg-color);
+    border-radius: 1rem;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    z-index: 9999;
+    overflow: hidden;
+    transform: translateY(20px);
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out, visibility 0.3s ease-out;
+}
+.chatbot-modal.active {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+}
+.chatbot-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.chatbot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--input-bg-color);
+}
+.chatbot-close-button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-color);
+    cursor: pointer;
+}
+.chatbot-messages {
+    flex-grow: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    background-color: var(--bg-color);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.chatbot-messages::-webkit-scrollbar {
+    width: 5px;
+}
+.chatbot-messages::-webkit-scrollbar-track {
+    background: var(--input-bg-color);
+}
+.chatbot-messages::-webkit-scrollbar-thumb {
+    background: var(--secondary-color);
+    border-radius: 10px;
+}
+.message {
+    max-width: 80%;
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    word-wrap: break-word;
+}
+.message.from-user {
+    align-self: flex-end;
+    background-color: var(--primary-color);
+    color: white;
+    border-bottom-right-radius: 0.25rem;
+}
+.message.from-ai {
+    align-self: flex-start;
+    background-color: var(--card-bg-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-bottom-left-radius: 0.25rem;
+}
+.chatbot-input {
+    display: flex;
+    padding: 1rem;
+    border-top: 1px solid var(--border-color);
+    background-color: var(--input-bg-color);
+}
+.chatbot-input input {
+    flex-grow: 1;
+    border: 1px solid var(--border-color);
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    background-color: var(--card-bg-color);
+    color: var(--text-color);
+}
+.chatbot-input button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+}
+
+/* Auth Modal Styles */
+.auth-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.auth-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+.auth-content {
+    background-color: var(--card-bg-color);
+    border-radius: 0.75rem;
+    padding: 2rem;
+    max-width: 450px;
+    width: 90%;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    position: relative;
+}
+.auth-close-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
