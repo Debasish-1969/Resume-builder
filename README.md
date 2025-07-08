@@ -4,6 +4,15 @@ Replace this placeholder image with a screenshot of your landing page.
 🌟 Overview
 The Digital Resume Builder is a modern, interactive web application designed to help users create professional and visually appealing resumes with ease. It provides a step-by-step guided form, real-time preview, AI-powered suggestions, and various export options, including PDF. The application also features theme customization, autosave, and user authentication for cloud storage of resume data.
 
+
+Preview
+![Screenshot 2025-07-08 232806](https://github.com/user-attachments/assets/541db962-bac4-4787-b08b-c233c9aab72f)
+![Screenshot 2025-07-08 232820](https://github.com/user-attachments/assets/7a7d10d1-0cc9-4b8e-976e-ab444e206225)
+![Screenshot 2025-07-08 232852](https://github.com/user-attachments/assets/f6b52911-f7fe-4579-97c0-9370f492ce92)
+![Screenshot 2025-07-08 232905](https://github.com/user-attachments/assets/c63b2bc1-50fe-40c7-bed5-3947a885fa21)
+![image](https://github.com/user-attachments/assets/8b79b4b7-ae48-4667-9802-fad2a0509b8c)
+
+
 ✨ Features
 Multi-Step Guided Form: 🚶‍♀️ Intuitive, step-by-step process for inputting personal details, education, experience, skills, and a professional summary.
 
